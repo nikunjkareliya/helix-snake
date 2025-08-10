@@ -22,6 +22,12 @@ export class InputController {
       // Allow one direction change at the start of each Playing phase
       if (state === GameState.Playing) this.model.allowDirectionChange();
     });
+    // Re-enable direction changes after each processed snake movement tick
+    EventBus.on(GameEvents.SNAKE_MOVE, () => {
+      if (this.model.getGameState() === GameState.Playing) {
+        this.model.allowDirectionChange();
+      }
+    });
   }
 
   private attachListeners(): void {

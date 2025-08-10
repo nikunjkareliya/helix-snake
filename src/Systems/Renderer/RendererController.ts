@@ -22,13 +22,12 @@ export class RendererController {
   private applyInitialSizing(): void {
     const canvas = this.model.getCanvas();
     // Ensure explicit CSS size to guarantee clientWidth/Height
-    if (!canvas.style.width) canvas.style.width = '100vw';
-    if (!canvas.style.height) canvas.style.height = '100vh';
+    // Canvas CSS size is provided by index.html; no override here
 
     // Compute CSS pixel dimensions
     const rect = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.floor(rect.width || window.innerWidth || 800));
-    const height = Math.max(1, Math.floor(rect.height || window.innerHeight || 600));
+    const width = Math.max(1, Math.floor(rect.width || 800));
+    const height = Math.max(1, Math.floor(rect.height || 600));
     const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
     const dims: RendererDimensions = { cssWidth: width, cssHeight: height, devicePixelRatio: dpr };
     this.model.setDimensions(dims);
@@ -68,6 +67,13 @@ export class RendererController {
 
   private subscribeToEvents(): void {
     EventBus.on(GameEvents.GAME_STATE_CHANGE, ({ state }) => this.renderOverlayForState(state));
+    let cellSize = 16;
+    EventBus.on(GameEvents.GRID_CONFIG_SET, ({ gridSize }) => { cellSize = gridSize; });
+    EventBus.on(GameEvents.SNAKE_MOVE, ({ head, tail }) => {
+      // Minimal dirty redraw: draw new head, clear old tail
+      if (tail) this.view.fillRect(tail.x * cellSize, tail.y * cellSize, cellSize, cellSize, '#0f1218');
+      this.view.fillRect(head.x * cellSize, head.y * cellSize, cellSize, cellSize, '#2bd56f');
+    });
   }
 
   private renderOverlayForState(state: GameState): void {
@@ -75,6 +81,7 @@ export class RendererController {
     const width = canvas.clientWidth || canvas.width;
     const text = this.buildOverlayText(state);
     this.view.clear(undefined);
+    // Inform food renderer to redraw existing food on overlay clears handled via GAME_STATE_CHANGE subscriber in FoodController
     if (text) this.view.drawText(text, Math.floor(width / 2), 80, '#e8e8ea', 20, 'center');
   }
 

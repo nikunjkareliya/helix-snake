@@ -1,14 +1,15 @@
 // Typed EventBus singleton with compile-time safety based on GameEvents payload map.
 // Concrete class, no interfaces/abstracts.
 
-import { EventPayloads, GameEventName } from './GameEvents.js';
+import { EventPayloads } from './GameEvents.js';
 
-type Listener<E extends GameEventName> = (payload: EventPayloads[E]) => void;
+type EventKey = keyof EventPayloads;
+type Listener<E extends EventKey> = (payload: EventPayloads[E]) => void;
 
 class EventBusClass {
-  private listeners: Map<GameEventName, Set<Function>> = new Map();
+  private listeners: Map<EventKey, Set<Function>> = new Map();
 
-  on<E extends GameEventName>(eventName: E, callback: Listener<E>): void {
+  on<E extends EventKey>(eventName: E, callback: Listener<E>): void {
     let set = this.listeners.get(eventName);
     if (!set) {
       set = new Set();
@@ -17,14 +18,14 @@ class EventBusClass {
     set.add(callback as unknown as Function);
   }
 
-  off<E extends GameEventName>(eventName: E, callback: Listener<E>): void {
+  off<E extends EventKey>(eventName: E, callback: Listener<E>): void {
     const set = this.listeners.get(eventName);
     if (!set) return;
     set.delete(callback as unknown as Function);
     if (set.size === 0) this.listeners.delete(eventName);
   }
 
-  emit<E extends GameEventName>(eventName: E, payload: EventPayloads[E]): void {
+  emit<E extends EventKey>(eventName: E, payload: EventPayloads[E]): void {
     const set = this.listeners.get(eventName);
     if (!set) return;
     // Emit readonly payload; callers should pass immutable objects
