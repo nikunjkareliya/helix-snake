@@ -21,14 +21,10 @@ export class RendererController {
 
   private applyInitialSizing(): void {
     const canvas = this.model.getCanvas();
-    // Ensure explicit CSS size to guarantee clientWidth/Height
-    if (!canvas.style.width) canvas.style.width = '100vw';
-    if (!canvas.style.height) canvas.style.height = '100vh';
-
-    // Compute CSS pixel dimensions
+    // Compute CSS pixel dimensions based on actual element size (centered container)
     const rect = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.floor(rect.width || window.innerWidth || 800));
-    const height = Math.max(1, Math.floor(rect.height || window.innerHeight || 600));
+    const width = Math.max(1, Math.floor(rect.width || 800));
+    const height = Math.max(1, Math.floor(rect.height || 600));
     const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
     const dims: RendererDimensions = { cssWidth: width, cssHeight: height, devicePixelRatio: dpr };
     this.model.setDimensions(dims);
@@ -47,6 +43,14 @@ export class RendererController {
 
   clear(color?: string): void {
     this.view.clear(color);
+  }
+
+  fillRect(x: number, y: number, width: number, height: number, color: string): void {
+    this.view.fillRect(x, y, width, height, color);
+  }
+
+  drawText(text: string, x: number, y: number, color: string, size: number, align: CanvasTextAlign): void {
+    this.view.drawText(text, x, y, color, size, align);
   }
 
   drawDebugBaseline(): void {
@@ -68,14 +72,30 @@ export class RendererController {
 
   private subscribeToEvents(): void {
     EventBus.on(GameEvents.GAME_STATE_CHANGE, ({ state }) => this.renderOverlayForState(state));
+    let cellSize = 16;
+    EventBus.on(GameEvents.GRID_CONFIG_SET, ({ gridSize }) => { cellSize = gridSize; });
+    EventBus.on(GameEvents.GAME_START, () => {
+      this.view.clear('#0f1218'); // Clear canvas on game restart
+    });
+    EventBus.on(GameEvents.SNAKE_INIT, ({ segments }) => {
+      for (const seg of segments) {
+        this.fillRect(seg.x * cellSize, seg.y * cellSize, cellSize, cellSize, '#2bd56f');
+      }
+    });
+    EventBus.on(GameEvents.SNAKE_MOVE, ({ head, tail }) => {
+      if (tail) this.fillRect(tail.x * cellSize, tail.y * cellSize, cellSize, cellSize, '#0f1218');
+      this.fillRect(head.x * cellSize, head.y * cellSize, cellSize, cellSize, '#2bd56f');
+    });
   }
 
   private renderOverlayForState(state: GameState): void {
     const canvas = this.model.getCanvas();
     const width = canvas.clientWidth || canvas.width;
     const text = this.buildOverlayText(state);
-    this.view.clear(undefined);
-    if (text) this.view.drawText(text, Math.floor(width / 2), 80, '#e8e8ea', 20, 'center');
+    if (text) {
+      this.view.clear(undefined);
+      this.drawText(text, Math.floor(width / 2), 80, '#e8e8ea', 20, 'center');
+    }
   }
 
   private buildOverlayText(state: GameState): string | null {

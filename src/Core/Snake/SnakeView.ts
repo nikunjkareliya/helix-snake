@@ -11,7 +11,7 @@ export class SnakeView {
   }
 
   renderSegment(pos: Position, color: string): void {
-    this.renderer['view'].fillRect(pos.x * this.cellSize, pos.y * this.cellSize, this.cellSize, this.cellSize, color);
+    this.renderer.fillRect(pos.x * this.cellSize, pos.y * this.cellSize, this.cellSize, this.cellSize, color);
   }
 
   renderSnake(segments: Position[], color: string): void {

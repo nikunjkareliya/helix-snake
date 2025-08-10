@@ -11,11 +11,11 @@ export class FoodView {
   }
 
   renderFood(pos: Position): void {
-    this.renderer['view'].fillRect(pos.x * this.cellSize, pos.y * this.cellSize, this.cellSize, this.cellSize, '#ff5d5d');
+    this.renderer.fillRect(pos.x * this.cellSize, pos.y * this.cellSize, this.cellSize, this.cellSize, '#ff5d5d');
   }
 
   clearFood(pos: Position): void {
-    this.renderer['view'].fillRect(pos.x * this.cellSize, pos.y * this.cellSize, this.cellSize, this.cellSize, '#0f1218');
+    this.renderer.fillRect(pos.x * this.cellSize, pos.y * this.cellSize, this.cellSize, this.cellSize, '#0f1218');
   }
 }
 

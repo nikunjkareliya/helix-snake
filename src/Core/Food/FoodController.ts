@@ -20,9 +20,13 @@ export class FoodController {
   }
 
   private subscribe(): void {
-    EventBus.on(GameEvents.SNAKE_MOVE, ({ head }) => this.onSnakeMove(head));
+    EventBus.on(GameEvents.COLLISION_CHECK_FOOD, ({ position }) => this.checkFoodCollision(position));
     EventBus.on(GameEvents.SNAKE_INIT, () => {
       // Spawn initial food after snake is drawn
+      this.spawn();
+    });
+    EventBus.on(GameEvents.GAME_START, () => {
+      // Spawn new food on game restart
       this.spawn();
     });
     EventBus.on(GameEvents.GAME_STATE_CHANGE, () => {
@@ -30,17 +34,16 @@ export class FoodController {
       const pos = this.model.getPosition();
       if (pos) {
         this.view.renderFood(pos);
-      } else {
-        this.spawn();
       }
     });
   }
 
-  private onSnakeMove(head: Position): void {
+  private checkFoodCollision(head: Position): void {
     const foodPos = this.model.getPosition();
     if (!foodPos) return;
     if (head.x === foodPos.x && head.y === foodPos.y) {
       EventBus.emit(GameEvents.FOOD_EATEN, Object.freeze({ position: foodPos }));
+      EventBus.emit(GameEvents.SNAKE_GROW, Object.freeze({}));
       this.view.clearFood(foodPos);
       this.spawn();
     }

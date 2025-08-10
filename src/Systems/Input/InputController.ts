@@ -19,8 +19,13 @@ export class InputController {
   private subscribeToGameState(): void {
     EventBus.on(GameEvents.GAME_STATE_CHANGE, ({ state }) => {
       this.model.setGameState(state);
-      // Allow one direction change at the start of each Playing phase
+      // Allow direction changes when entering Playing state
       if (state === GameState.Playing) this.model.allowDirectionChange();
+    });
+    
+    // Reset input state on game start/restart
+    EventBus.on(GameEvents.GAME_START, () => {
+      this.model.allowDirectionChange();
     });
   }
 
@@ -42,13 +47,12 @@ export class InputController {
         }
       }
 
-      // Handle direction changes
-      if (!this.model.isDirectionChangeAllowed()) return;
+      // Handle direction changes - only during Playing state
+      if (this.model.getGameState() !== GameState.Playing) return;
       const direction = this.mapKeyToDirection(code);
       if (direction == null) return;
       EventBus.emit(GameEvents.SNAKE_DIRECTION_CHANGE, Object.freeze({ direction }));
       this.model.setLastDirection(direction);
-      this.model.consumeDirectionChange();
     };
 
     this.keyupHandler = (e: KeyboardEvent) => {
@@ -62,12 +66,16 @@ export class InputController {
   private mapKeyToDirection(code: string): Direction | null {
     switch (code) {
       case 'ArrowUp':
+      case 'KeyW':
         return Direction.Up;
       case 'ArrowRight':
+      case 'KeyD':
         return Direction.Right;
       case 'ArrowDown':
+      case 'KeyS':
         return Direction.Down;
       case 'ArrowLeft':
+      case 'KeyA':
         return Direction.Left;
       default:
         return null;

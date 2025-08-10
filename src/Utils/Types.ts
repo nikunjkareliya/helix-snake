@@ -19,6 +19,13 @@ export enum GameState {
   GameOver = 'GAME_OVER',
 }
 
+export enum ScreenName {
+  Menu = 'MENU',
+  Game = 'GAME',
+  Pause = 'PAUSE',
+  GameOver = 'GAME_OVER',
+}
+
 export enum PowerUpType {
   Slow = 'SLOW',
   Shrink = 'SHRINK',
