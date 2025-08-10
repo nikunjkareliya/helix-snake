@@ -5,11 +5,14 @@ import { EventBus } from '../../Utils/EventBus.js';
 import { GameEvents } from '../../Utils/GameEvents.js';
 import { GameState } from '../../Utils/Types.js';
 import { RendererView } from './RendererView.js';
+import { RenderOptimizer, GridRenderOptimizer } from '../../Utils/RenderOptimizer.js';
 
 export class RendererController {
   private readonly model: RendererModel;
   private readonly view: RendererView;
   private resizeObserver: ResizeObserver | null = null;
+  private renderOptimizer = new RenderOptimizer();
+  private gridOptimizer: GridRenderOptimizer | null = null;
 
   constructor(canvas: HTMLCanvasElement) {
     this.model = new RendererModel(canvas);
@@ -42,15 +45,41 @@ export class RendererController {
   }
 
   clear(color?: string): void {
+    this.renderOptimizer.markFullRedraw();
     this.view.clear(color);
   }
 
   fillRect(x: number, y: number, width: number, height: number, color: string): void {
+    this.renderOptimizer.markDirty(x, y, width, height);
+    if (this.gridOptimizer) {
+      const cellX = Math.floor(x / 16); // Assuming 16px cell size
+      const cellY = Math.floor(y / 16);
+      this.gridOptimizer.markCellDirty(cellX, cellY);
+    }
     this.view.fillRect(x, y, width, height, color);
   }
 
   drawText(text: string, x: number, y: number, color: string, size: number, align: CanvasTextAlign): void {
+    this.renderOptimizer.markDirty(x - 50, y - size, 100, size * 2); // Rough text bounds
     this.view.drawText(text, x, y, color, size, align);
+  }
+
+  beginFrame(): void {
+    this.renderOptimizer.updateFrameStats(performance.now());
+  }
+
+  endFrame(): void {
+    this.renderOptimizer.clearDirtyRegions();
+    if (this.gridOptimizer) {
+      this.gridOptimizer.clearDirtyCells();
+    }
+  }
+
+  getPerformanceStats(): { fps: number; frameCount: number } {
+    return {
+      fps: this.renderOptimizer.getAverageFPS(),
+      frameCount: this.renderOptimizer.getFrameCount()
+    };
   }
 
   drawDebugBaseline(): void {
@@ -73,7 +102,10 @@ export class RendererController {
   private subscribeToEvents(): void {
     EventBus.on(GameEvents.GAME_STATE_CHANGE, ({ state }) => this.renderOverlayForState(state));
     let cellSize = 16;
-    EventBus.on(GameEvents.GRID_CONFIG_SET, ({ gridSize }) => { cellSize = gridSize; });
+    EventBus.on(GameEvents.GRID_CONFIG_SET, ({ gridSize, cols, rows }) => { 
+      cellSize = gridSize; 
+      this.gridOptimizer = new GridRenderOptimizer(gridSize, cols, rows);
+    });
     EventBus.on(GameEvents.GAME_START, () => {
       this.view.clear('#0f1218'); // Clear canvas on game restart
     });

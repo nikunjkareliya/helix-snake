@@ -3,15 +3,18 @@ import { GameEvents } from '../../Utils/GameEvents.js';
 import { ScoreModel } from './ScoreModel.js';
 import { ScoreView } from './ScoreView.js';
 import { RendererController } from '../Renderer/RendererController.js';
+import { VisualEffects } from '../../Utils/AnimationSystem.js';
 
 export class ScoreController {
   private readonly model: ScoreModel;
   private readonly view: ScoreView;
+  private readonly renderer: RendererController;
   private currentSpeedMultiplier = 1;
 
   constructor(renderer: RendererController) {
     this.model = new ScoreModel();
     this.view = new ScoreView(renderer);
+    this.renderer = renderer;
     this.subscribe();
     this.view.render(this.model.getScore());
   }
@@ -32,6 +35,9 @@ export class ScoreController {
       this.model.onFoodEatenRecalc();
       EventBus.emit(GameEvents.SCORE_UPDATED, Object.freeze({ score: this.model.getScore() }));
       this.view.render(this.model.getScore());
+      
+      // Show visual score popup effect
+      VisualEffects.scorePopup(this.renderer, 400, 50, points);
     });
 
     EventBus.on(GameEvents.GAME_START, () => {
@@ -57,6 +63,9 @@ export class ScoreController {
         this.model.addPoints(bonusPoints);
         EventBus.emit(GameEvents.SCORE_UPDATED, Object.freeze({ score: this.model.getScore() }));
         this.view.render(this.model.getScore());
+        
+        // Show power-up bonus popup
+        VisualEffects.scorePopup(this.renderer, 400, 80, bonusPoints);
       }
     });
   }

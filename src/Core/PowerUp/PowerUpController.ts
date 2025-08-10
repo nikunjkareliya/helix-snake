@@ -4,15 +4,18 @@ import { Position, PowerUpType } from '../../Utils/Types.js';
 import { PowerUpModel, PowerUpData } from './PowerUpModel.js';
 import { PowerUpView } from './PowerUpView.js';
 import { RendererController } from '../../Systems/Renderer/RendererController.js';
+import { VisualEffects } from '../../Utils/AnimationSystem.js';
 
 export class PowerUpController {
   private readonly model: PowerUpModel;
   private readonly view: PowerUpView;
+  private readonly renderer: RendererController;
   private lastFrameTime = 0;
 
   constructor(renderer: RendererController, cols: number, rows: number, cellSize: number) {
     this.model = new PowerUpModel();
     this.view = new PowerUpView(renderer, cellSize);
+    this.renderer = renderer;
     // Mark parameters as used to satisfy noUnusedParameters while keeping signature for future use
     void cols; void rows;
     this.subscribe();
@@ -75,6 +78,12 @@ export class PowerUpController {
   }
 
   private collectPowerUp(powerUp: PowerUpData): void {
+    // Show collection effect before clearing
+    const x = powerUp.position.x * 16; // Assuming 16px cell size
+    const y = powerUp.position.y * 16;
+    const color = this.getPowerUpColor(powerUp.type);
+    VisualEffects.pulseEffect(this.renderer, x, y, 16, color, 400);
+    
     // Clear the spawned power-up
     this.view.clearPowerUp(powerUp.position);
     this.model.setSpawnedPowerUp(null);
@@ -150,5 +159,14 @@ export class PowerUpController {
   private randomPowerUpType(): PowerUpType {
     const types = [PowerUpType.Slow, PowerUpType.Shrink, PowerUpType.Ghost];
     return types[Math.floor(Math.random() * types.length)];
+  }
+
+  private getPowerUpColor(type: PowerUpType): string {
+    switch (type) {
+      case PowerUpType.Slow: return '#4da6ff'; // Blue
+      case PowerUpType.Shrink: return '#ffeb3b'; // Yellow
+      case PowerUpType.Ghost: return '#9c27b0'; // Purple
+      default: return '#ffffff';
+    }
   }
 }

@@ -11,6 +11,7 @@ import { PowerUpController } from './Core/PowerUp/PowerUpController.js';
 import { ScoreController } from './Systems/Score/ScoreController.js';
 import { ScreenController } from './Systems/Screen/ScreenController.js';
 import { GameConfig } from './Utils/Types.js';
+import { eventDebugger } from './Utils/EventDebugger.js';
 
 function bootstrap(): void {
   const canvas = document.getElementById('gameCanvas') as HTMLCanvasElement | null;
@@ -57,6 +58,9 @@ function bootstrap(): void {
   window.__score = score;
   // @ts-expect-error attach for debug only
   window.__screen = screen;
+  
+  // Enable event debugging in development (can be disabled in production)
+  eventDebugger.enable();
 }
 // Ensure DOM is ready before bootstrapping
 if (document.readyState === 'loading') {
