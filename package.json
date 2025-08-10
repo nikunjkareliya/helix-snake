@@ -1,0 +1,18 @@
+{
+  "name": "helix-snake",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HelixSnake - Modern minimal Snake game in TypeScript (MVC, EventBus)",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "dev": "tsc -w -p tsconfig.json",
+    "serve": "http-server . -c-1 -p 0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.4.5"
+  }
+}
+
