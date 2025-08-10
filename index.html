@@ -13,21 +13,12 @@
       color: #e8e8ea;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
     }
-    .container {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      background: #0e0f12;
-    }
     #gameCanvas {
       display: block;
-      width: min(96vw, 960px);
-      height: min(96vh, 720px);
+      width: 100vw;
+      height: 100vh;
       image-rendering: pixelated;
       background: #111318;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-      border-radius: 8px;
     }
   </style>
   <script type="module" src="./dist/main.js"></script>
@@ -35,9 +26,7 @@
   <!-- Canvas element is created by Renderer system; placeholder for now -->
 </head>
 <body>
-  <div class="container">
-    <canvas id="gameCanvas"></canvas>
-  </div>
+  <canvas id="gameCanvas"></canvas>
 </body>
 <script>
 // All TypeScript compiled to JavaScript will be inlined here in the final build step.
